@@ -1,0 +1,15 @@
+{
+  "name": "pruntime-node-list",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "@11ty/eleventy": "^2.0.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
