@@ -94,6 +94,10 @@ async function main() {
 
   // 5. Write to file.
   fs.writeFileSync('_site/nodes.json', JSON.stringify(availableNodes, null, 2))
+
+  let pages = fs.readFileSync('src/index.md', 'utf-8')
+  pages += '\nUpdated at: ' + new Date().toISOString() + '\n'
+  fs.writeFileSync('src/index.md', pages)
 }
 
 function handleUncaughtExceptionOrRejection() {}
