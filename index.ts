@@ -12,18 +12,24 @@ const argv = require('arg')({
 
 type PoormanEither = [boolean, string]
 
+const MAX_TOLERATED_BLOCK_DIFF = 10
+
 //
 // @returns [workerId, endpointUrl, isAvailable, errorMessage]
 //
-async function diagnoseEndpointAvailability([workerId, endpointUrl]: [string, string]) {
+async function diagnoseEndpointAvailability(workerId: string, endpointUrl: string, currentBlockNumber: number): Promise<[string, string, boolean, string]> {
   const checkEndpoint = async () => {
     try {
       const client = createPruntimeClient(endpointUrl)
       const info = await client.getInfo({})
-      if (`0x${info.ecdhPublicKey || ''}` === workerId) {
-        return [true, null] as const
+      if (`0x${info.ecdhPublicKey || ''}` !== workerId) {
+        return [false, 'On-chain worker ID not match to the worker ECDH PublicKey.']
       }
-      return [false, 'On-chain worker ID not match to the worker ECDH PublicKey.']
+      const diff = currentBlockNumber - info.headernum
+      if (diff > MAX_TOLERATED_BLOCK_DIFF) {
+        return [false, `Worker is ${diff} blocks behind.`] as const
+      }
+      return [true, null] as const
     } catch (err) {
       return [false, `${err}`] as const
     }
@@ -46,6 +52,10 @@ async function main() {
     noInitWarn: true
   }))
 
+  // Getting the latest finalized block number. This is used to check the latest on-chain state.
+  const number = (await apiPromise.rpc.chain.getHeader()).number.toNumber()
+  console.log('latest finalized block number:', number)
+
   // 1. Getting all registered workers by cluster.
   console.log('getting all registered workers...')
   const clusterWorkersQuery = await apiPromise.query.phalaPhatContracts.clusterWorkers.entries()
@@ -67,7 +77,9 @@ async function main() {
   // 3. batch check all pruntime endpoint.
   console.log('checking all pruntime endpoint...')
   // @ts-ignore
-  const result = await Promise.all(endpointInfos.map(diagnoseEndpointAvailability))
+  const result = await Promise.all(endpointInfos.map(([workerId, endpoint]) => diagnoseEndpointAvailability(
+    workerId, endpoint, number
+  )))
 
   // 4. Print to console.
   console.log("\n")
