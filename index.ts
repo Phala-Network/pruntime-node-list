@@ -46,7 +46,8 @@ async function main() {
   if (!ws) {
     throw new Error('No ws endpoint specified')
   }
-  const provider = argv['--http'] ? new HttpProvider(ws.replace('wss://', 'https://').replace('ws://', 'http://')) : new WsProvider(ws)
+  const preferHttp = argv['--http'] || !!process.versions.bun
+  const provider = preferHttp ? new HttpProvider(ws.replace('wss://', 'https://').replace('ws://', 'http://')) : new WsProvider(ws)
   const apiPromise = await ApiPromise.create(options({
     provider,
     noInitWarn: true
