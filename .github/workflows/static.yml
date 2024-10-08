@@ -37,6 +37,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+          bun-download-url: https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip
       - run: bun install
       - run: bun run index.ts --ws wss://api.phala.network/ws --http
       - run: bun run build
