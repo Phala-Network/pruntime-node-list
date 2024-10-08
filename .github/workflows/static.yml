@@ -35,6 +35,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - run: bun install
       - run: bun run index.ts --ws wss://api.phala.network/ws --http
       - run: bun run build
